@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <title>文本加密解密器</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"],
+        textarea {
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+
+        button {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-4 text-center">文本加密解密器</h1>
+        <div class="mb-4">
+            <label for="inputText" class="block text-sm font-medium text-gray-700">输入文本:</label>
+            <textarea id="inputText" class="mt-1 block w-full border border-gray-300 rounded p-2" rows="4"></textarea>
+        </div>
+        <div class="mb-4">
+            <label for="password" class="block text-sm font-medium text-gray-700">密码:</label>
+            <input type="text" id="password" class="mt-1 block w-full border border-gray-300 rounded p-2">
+        </div>
+        <div class="flex space-x-4 mb-4">
+            <button id="encryptButton" class="bg-blue-500 text-white py-2 px-4 rounded">加密</button>
+            <button id="decryptButton" class="bg-green-500 text-white py-2 px-4 rounded">解密</button>
+        </div>
+        <div>
+            <label for="outputText" class="block text-sm font-medium text-gray-700">输出文本:</label>
+            <textarea id="outputText" class="mt-1 block w-full border border-gray-300 rounded p-2" rows="4"
+                readonly></textarea>
+        </div>
+    </div>
+    <script>
+        const inputText = document.getElementById('inputText');
+        const password = document.getElementById('password');
+        const encryptButton = document.getElementById('encryptButton');
+        const decryptButton = document.getElementById('decryptButton');
+        const outputText = document.getElementById('outputText');
+
+        function xorEncryptDecrypt(text, key) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode);
+            }
+            return result;
+        }
+
+        function caesarCipher(text, shift) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                let charCode = text.charCodeAt(i);
+                charCode = (charCode + shift) % 256;
+                result += String.fromCharCode(charCode);
+            }
+            return result;
+        }
+
+        function strToUtf8(str) {
+            return unescape(encodeURIComponent(str));
+        }
+
+        function utf8ToStr(utf8) {
+            return decodeURIComponent(escape(utf8));
+        }
+
+        encryptButton.addEventListener('click', () => {
+            const text = inputText.value;
+            const pass = password.value;
+            if (text && pass) {
+                const utf8Text = strToUtf8(text);
+                const firstLayer = xorEncryptDecrypt(utf8Text, pass);
+                const secondLayer = caesarCipher(firstLayer, pass.length);
+                outputText.value = btoa(secondLayer);
+            }
+        });
+
+        decryptButton.addEventListener('click', () => {
+            const text = inputText.value;
+            const pass = password.value;
+            if (text && pass) {
+                const decoded = atob(text);
+                const firstLayer = caesarCipher(decoded, -pass.length);
+                const secondLayer = xorEncryptDecrypt(firstLayer, pass);
+                outputText.value = utf8ToStr(secondLayer);
+            }
+        });
+    </script>
+</body>
+
+</html>
+    
